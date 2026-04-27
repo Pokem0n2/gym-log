@@ -1,0 +1,11 @@
+services:
+  gym-log:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    environment:
+      - ADDR=:8080
+      - DB_PATH=/data/gym.db

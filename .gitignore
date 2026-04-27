@@ -1,0 +1,4 @@
+gym-log
+data/
+*.db
+.env
