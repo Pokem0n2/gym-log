@@ -2,10 +2,10 @@ services:
   gym-log:
     build: .
     ports:
-      - "8080:8080"
+      - "1118:1118"
     volumes:
       - ./data:/data
     restart: unless-stopped
     environment:
-      - ADDR=:8080
+      - ADDR=:1118
       - DB_PATH=/data/gym.db

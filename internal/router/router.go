@@ -38,6 +38,11 @@ func New(db *repository.DB) *gin.Engine {
 		api.GET("/stats/volume", sth.VolumeByDate)
 	}
 
+	r.Static("/static", "./static")
+	r.GET("/", func(c *gin.Context) {
+		c.File("./static/index.html")
+	})
+
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})

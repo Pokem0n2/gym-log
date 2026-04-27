@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>gym-log</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="train">训练</button>
+    <button class="tab-btn" data-tab="exercises">动作库</button>
+    <button class="tab-btn" data-tab="stats">统计</button>
+  </nav>
+
+  <main>
+    <!-- 训练 -->
+    <section id="tab-train" class="tab-panel active">
+      <div class="card">
+        <label>日期</label>
+        <input type="date" id="train-date">
+        <button id="btn-new-workout" class="btn primary">新建训练</button>
+      </div>
+
+      <div id="workout-area" class="hidden">
+        <div class="card">
+          <label>动作</label>
+          <select id="sel-exercise"></select>
+          <div class="row">
+            <div class="field">
+              <label>重量 (kg)</label>
+              <input type="number" id="set-weight" step="0.5" min="0">
+            </div>
+            <div class="field">
+              <label>次数</label>
+              <input type="number" id="set-reps" min="1">
+            </div>
+            <div class="field">
+              <label>RPE</label>
+              <input type="number" id="set-rpe" step="0.5" min="1" max="10">
+            </div>
+          </div>
+          <button id="btn-add-set" class="btn primary">添加组</button>
+        </div>
+
+        <div class="card">
+          <h3>当日记录</h3>
+          <div id="set-list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>历史训练</h3>
+        <div id="workout-list"></div>
+      </div>
+    </section>
+
+    <!-- 动作库 -->
+    <section id="tab-exercises" class="tab-panel">
+      <div class="card">
+        <label>动作名称</label>
+        <input type="text" id="ex-name" placeholder="例如：卧推">
+        <label>分类</label>
+        <input type="text" id="ex-category" placeholder="例如：胸部">
+        <button id="btn-add-ex" class="btn primary">添加动作</button>
+      </div>
+      <div class="card">
+        <h3>动作列表</h3>
+        <div id="ex-list"></div>
+      </div>
+    </section>
+
+    <!-- 统计 -->
+    <section id="tab-stats" class="tab-panel">
+      <div class="card">
+        <label>选择动作</label>
+        <select id="stat-exercise"></select>
+        <button id="btn-load-pr" class="btn primary">查看趋势</button>
+        <div class="chart-wrap">
+          <canvas id="pr-chart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <h3>训练量</h3>
+        <div class="row">
+          <div class="field">
+            <label>开始</label>
+            <input type="date" id="stat-start">
+          </div>
+          <div class="field">
+            <label>结束</label>
+            <input type="date" id="stat-end">
+          </div>
+        </div>
+        <button id="btn-load-vol" class="btn primary">查看训练量</button>
+        <div class="chart-wrap">
+          <canvas id="vol-chart"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

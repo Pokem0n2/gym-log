@@ -12,7 +12,7 @@ type Config struct {
 func Load() *Config {
 	addr := os.Getenv("ADDR")
 	if addr == "" {
-		addr = ":8080"
+		addr = ":1118"
 	}
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
