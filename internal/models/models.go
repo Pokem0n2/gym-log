@@ -7,6 +7,7 @@ type Exercise struct {
 	ID        int64     `json:"id"`
 	Name      string    `json:"name" binding:"required"`
 	Category  string    `json:"category"`
+	Fields    string    `json:"fields"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -22,13 +23,15 @@ type Workout struct {
 
 // Set 单组记录
 type Set struct {
-	ID         int64     `json:"id"`
-	WorkoutID  int64     `json:"workout_id"`
-	ExerciseID int64     `json:"exercise_id" binding:"required"`
-	Reps       int       `json:"reps" binding:"required,min=1"`
-	Weight     float64   `json:"weight" binding:"required,min=0"`
-	RPE        *float64  `json:"rpe,omitempty"`
-	IsWarmup   bool      `json:"is_warmup"`
-	Notes      string    `json:"notes"`
-	CreatedAt  time.Time `json:"created_at"`
+	ID           int64     `json:"id"`
+	WorkoutID    int64     `json:"workout_id"`
+	ExerciseID   int64     `json:"exercise_id" binding:"required"`
+	ExerciseName string    `json:"exercise_name"`
+	Reps         int       `json:"reps"`
+	Weight       float64   `json:"weight"`
+	RPE          *float64  `json:"rpe,omitempty"`
+	IsWarmup     bool      `json:"is_warmup"`
+	Extra        string    `json:"extra"`
+	Notes        string    `json:"notes"`
+	CreatedAt    time.Time `json:"created_at"`
 }

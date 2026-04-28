@@ -32,37 +32,11 @@
 
           <div id="warmup-area" class="hidden">
             <div class="warmup-title">热身组</div>
-            <div class="row">
-              <div class="field">
-                <label>热身重量 (kg)</label>
-                <input type="number" id="warmup-weight" step="0.5" min="0">
-              </div>
-              <div class="field">
-                <label>热身每组次数</label>
-                <input type="number" id="warmup-reps" min="1">
-              </div>
-              <div class="field">
-                <label>热身组数</label>
-                <input type="number" id="warmup-rpe" min="1" value="1">
-              </div>
-            </div>
+            <div id="warmup-fields" class="row"></div>
           </div>
 
           <div class="normal-title">常规组</div>
-          <div class="row">
-            <div class="field">
-              <label>重量 (kg)</label>
-              <input type="number" id="set-weight" step="0.5" min="0">
-            </div>
-            <div class="field">
-              <label>每组次数 (个)</label>
-              <input type="number" id="set-reps" min="1">
-            </div>
-            <div class="field">
-              <label>组数 (reps)</label>
-              <input type="number" id="set-rpe" min="1">
-            </div>
-          </div>
+          <div id="normal-fields" class="row"></div>
           <div class="btn-row">
             <button id="btn-toggle-warmup" class="btn secondary">热身组</button>
             <button id="btn-add-set" class="btn primary">添加组</button>
@@ -88,6 +62,17 @@
         <input type="text" id="ex-name" placeholder="例如：卧推">
         <label>分类</label>
         <input type="text" id="ex-category" placeholder="例如：胸部">
+        <label>字段配置</label>
+        <div id="ex-fields-wrap" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;">
+          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="weight" checked> 重量</label>
+          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="reps" checked> 次数</label>
+          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="sets"> 组数</label>
+          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="duration"> 时长</label>
+          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="speed"> 速度</label>
+          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="incline"> 坡度</label>
+          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="resistance"> 阻尼</label>
+          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="distance"> 距离</label>
+        </div>
         <button id="btn-add-ex" class="btn primary">添加动作</button>
       </div>
       <div class="card">

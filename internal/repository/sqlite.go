@@ -60,8 +60,34 @@ func migrate(db *sql.DB) error {
 	if _, err := db.Exec(schema); err != nil {
 		return err
 	}
-	// 兼容旧表：尝试添加 is_warmup 列，已存在则忽略错误
+	// 兼容旧表：尝试添加新列
+	_, _ = db.Exec("ALTER TABLE exercises ADD COLUMN fields TEXT DEFAULT '[\\\"weight\\\",\\\"reps\\\",\\\"sets\\\"]'")
+	_, _ = db.Exec("ALTER TABLE sets ADD COLUMN extra TEXT DEFAULT '{}'")
 	_, _ = db.Exec("ALTER TABLE sets ADD COLUMN is_warmup INTEGER DEFAULT 0")
+	// 旧数据迁移：为已有动作补充默认 fields
+	return migrateExerciseFields(db)
+}
+
+func migrateExerciseFields(db *sql.DB) error {
+	// 已有数据的字段映射
+	defaults := map[string]string{
+		"俯卧撑":   `["reps","sets"]`,
+		"引体向上": `["reps","sets"]`,
+		"卷腹":     `["reps","sets"]`,
+		"悬垂举腿": `["reps","sets"]`,
+		"平板支撑": `["duration","sets"]`,
+		"俄罗斯转体": `["reps","sets"]`,
+		"仰卧抬腿": `["reps","sets"]`,
+		"跑步机":   `["speed","incline","duration"]`,
+		"椭圆机":   `["resistance","incline","duration"]`,
+		"划船机":   `["distance","duration"]`,
+		"战绳":     `["duration","sets"]`,
+	}
+	for name, fields := range defaults {
+		_, _ = db.Exec("UPDATE exercises SET fields = ? WHERE name = ? AND (fields IS NULL OR fields = '')", fields, name)
+	}
+	// 其余未设置的动作，默认为力量型
+	_, _ = db.Exec("UPDATE exercises SET fields = '[\"weight\",\"reps\",\"sets\"]' WHERE fields IS NULL OR fields = ''")
 	return nil
 }
 
@@ -74,85 +100,85 @@ func seed(db *sql.DB) error {
 		return nil
 	}
 
-	exercises := []struct{ name, category string }{
+	exercises := []struct{ name, category, fields string }{
 		// 胸部
-		{"杠铃卧推", "胸部"},
-		{"哑铃卧推", "胸部"},
-		{"上斜杠铃卧推", "胸部"},
-		{"上斜哑铃卧推", "胸部"},
-		{"哑铃飞鸟", "胸部"},
-		{"绳索夹胸", "胸部"},
-		{"俯卧撑", "胸部"},
-		{"双杠臂曲伸", "胸部"},
+		{"杠铃卧推", "胸部", `["weight","reps","sets"]`},
+		{"哑铃卧推", "胸部", `["weight","reps","sets"]`},
+		{"上斜杠铃卧推", "胸部", `["weight","reps","sets"]`},
+		{"上斜哑铃卧推", "胸部", `["weight","reps","sets"]`},
+		{"哑铃飞鸟", "胸部", `["weight","reps","sets"]`},
+		{"绳索夹胸", "胸部", `["weight","reps","sets"]`},
+		{"俯卧撑", "胸部", `["reps","sets"]`},
+		{"双杠臂曲伸", "胸部", `["reps","sets"]`},
 		// 背部
-		{"引体向上", "背部"},
-		{"杠铃划船", "背部"},
-		{"哑铃单臂划船", "背部"},
-		{"高位下拉", "背部"},
-		{"坐姿划船", "背部"},
-		{"硬拉", "背部"},
-		{"直腿硬拉", "背部"},
-		{"反向飞鸟", "背部"},
-		{"山羊挺身", "背部"},
+		{"引体向上", "背部", `["reps","sets"]`},
+		{"杠铃划船", "背部", `["weight","reps","sets"]`},
+		{"哑铃单臂划船", "背部", `["weight","reps","sets"]`},
+		{"高位下拉", "背部", `["weight","reps","sets"]`},
+		{"坐姿划船", "背部", `["weight","reps","sets"]`},
+		{"硬拉", "背部", `["weight","reps","sets"]`},
+		{"直腿硬拉", "背部", `["weight","reps","sets"]`},
+		{"反向飞鸟", "背部", `["weight","reps","sets"]`},
+		{"山羊挺身", "背部", `["weight","reps","sets"]`},
 		// 肩部
-		{"杠铃推举", "肩部"},
-		{"哑铃推举", "肩部"},
-		{"侧平举", "肩部"},
-		{"前平举", "肩部"},
-		{"俯身飞鸟", "肩部"},
-		{"面拉", "肩部"},
-		{"杠铃耸肩", "肩部"},
+		{"杠铃推举", "肩部", `["weight","reps","sets"]`},
+		{"哑铃推举", "肩部", `["weight","reps","sets"]`},
+		{"侧平举", "肩部", `["weight","reps","sets"]`},
+		{"前平举", "肩部", `["weight","reps","sets"]`},
+		{"俯身飞鸟", "肩部", `["weight","reps","sets"]`},
+		{"面拉", "肩部", `["weight","reps","sets"]`},
+		{"杠铃耸肩", "肩部", `["weight","reps","sets"]`},
 		// 二头肌
-		{"杠铃弯举", "二头肌"},
-		{"哑铃弯举", "二头肌"},
-		{"锤式弯举", "二头肌"},
-		{"牧师凳弯举", "二头肌"},
-		{"集中弯举", "二头肌"},
+		{"杠铃弯举", "二头肌", `["weight","reps","sets"]`},
+		{"哑铃弯举", "二头肌", `["weight","reps","sets"]`},
+		{"锤式弯举", "二头肌", `["weight","reps","sets"]`},
+		{"牧师凳弯举", "二头肌", `["weight","reps","sets"]`},
+		{"集中弯举", "二头肌", `["weight","reps","sets"]`},
 		// 三头肌
-		{"绳索下压", "三头肌"},
-		{"仰卧臂曲伸", "三头肌"},
-		{"窄距卧推", "三头肌"},
-		{"哑铃颈后臂曲伸", "三头肌"},
-		{"俯身臂曲伸", "三头肌"},
+		{"绳索下压", "三头肌", `["weight","reps","sets"]`},
+		{"仰卧臂曲伸", "三头肌", `["weight","reps","sets"]`},
+		{"窄距卧推", "三头肌", `["weight","reps","sets"]`},
+		{"哑铃颈后臂曲伸", "三头肌", `["weight","reps","sets"]`},
+		{"俯身臂曲伸", "三头肌", `["weight","reps","sets"]`},
 		// 胯四头肌
-		{"深蹲", "胯四头肌"},
-		{"前蹲", "胯四头肌"},
-		{"腿举", "胯四头肌"},
-		{"腿伸屈", "胯四头肌"},
-		{"弓步蹲", "胯四头肌"},
-		{"保加利亚分腿蹲", "胯四头肌"},
+		{"深蹲", "胯四头肌", `["weight","reps","sets"]`},
+		{"前蹲", "胯四头肌", `["weight","reps","sets"]`},
+		{"腿举", "胯四头肌", `["weight","reps","sets"]`},
+		{"腿伸屈", "胯四头肌", `["weight","reps","sets"]`},
+		{"弓步蹲", "胯四头肌", `["weight","reps","sets"]`},
+		{"保加利亚分腿蹲", "胯四头肌", `["weight","reps","sets"]`},
 		// 膘绳肌
-		{"腿弯举", "膘绳肌"},
-		{"早安式", "膘绳肌"},
+		{"腿弯举", "膘绳肌", `["weight","reps","sets"]`},
+		{"早安式", "膘绳肌", `["weight","reps","sets"]`},
 		// 臀部
-		{"臀推", "臀部"},
-		{"壶铃摇摆", "臀部"},
-		{"绳索后踢腿", "臀部"},
+		{"臀推", "臀部", `["weight","reps","sets"]`},
+		{"壶铃摇摆", "臀部", `["weight","reps","sets"]`},
+		{"绳索后踢腿", "臀部", `["weight","reps","sets"]`},
 		// 核心
-		{"卷腹", "核心"},
-		{"悬垂举腿", "核心"},
-		{"平板支撑", "核心"},
-		{"俄罗斯转体", "核心"},
-		{"仰卧抬腿", "核心"},
+		{"卷腹", "核心", `["reps","sets"]`},
+		{"悬垂举腿", "核心", `["reps","sets"]`},
+		{"平板支撑", "核心", `["duration","sets"]`},
+		{"俄罗斯转体", "核心", `["reps","sets"]`},
+		{"仰卧抬腿", "核心", `["reps","sets"]`},
 		// 有氧
-		{"跑步机", "有氧"},
-		{"椭圆机", "有氧"},
-		{"划船机", "有氧"},
-		{"战绳", "有氧"},
+		{"跑步机", "有氧", `["speed","incline","duration"]`},
+		{"椭圆机", "有氧", `["resistance","incline","duration"]`},
+		{"划船机", "有氧", `["distance","duration"]`},
+		{"战绳", "有氧", `["duration","sets"]`},
 	}
 
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
-	stmt, err := tx.Prepare("INSERT INTO exercises(name, category) VALUES(?,?)")
+	stmt, err := tx.Prepare("INSERT INTO exercises(name, category, fields) VALUES(?,?,?)")
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 	defer stmt.Close()
 	for _, e := range exercises {
-		if _, err := stmt.Exec(e.name, e.category); err != nil {
+		if _, err := stmt.Exec(e.name, e.category, e.fields); err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -163,7 +189,7 @@ func seed(db *sql.DB) error {
 // Exercise CRUD
 
 func (db *DB) ListExercises() ([]models.Exercise, error) {
-	rows, err := db.Query("SELECT id, name, category, created_at FROM exercises ORDER BY category, name")
+	rows, err := db.Query("SELECT id, name, category, fields, created_at FROM exercises ORDER BY category, name")
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +198,7 @@ func (db *DB) ListExercises() ([]models.Exercise, error) {
 	var list []models.Exercise
 	for rows.Next() {
 		var e models.Exercise
-		if err := rows.Scan(&e.ID, &e.Name, &e.Category, &e.CreatedAt); err != nil {
+		if err := rows.Scan(&e.ID, &e.Name, &e.Category, &e.Fields, &e.CreatedAt); err != nil {
 			return nil, err
 		}
 		list = append(list, e)
@@ -181,7 +207,10 @@ func (db *DB) ListExercises() ([]models.Exercise, error) {
 }
 
 func (db *DB) CreateExercise(e *models.Exercise) error {
-	r := db.QueryRow("INSERT INTO exercises(name, category) VALUES(?,?) RETURNING id, created_at", e.Name, e.Category)
+	if e.Fields == "" {
+		e.Fields = `["weight","reps","sets"]`
+	}
+	r := db.QueryRow("INSERT INTO exercises(name, category, fields) VALUES(?,?,?) RETURNING id, created_at", e.Name, e.Category, e.Fields)
 	return r.Scan(&e.ID, &e.CreatedAt)
 }
 
@@ -193,19 +222,67 @@ func (db *DB) DeleteExercise(id int64) error {
 // Workout CRUD
 
 func (db *DB) ListWorkouts() ([]models.Workout, error) {
-	rows, err := db.Query("SELECT id, date, notes, created_at FROM workouts ORDER BY date DESC, created_at DESC")
+	rows, err := db.Query(`
+		SELECT w.id, w.date, w.notes, w.created_at,
+			s.id, s.workout_id, s.exercise_id, s.reps, s.weight, s.rpe, s.is_warmup, s.extra, s.notes, s.created_at, e.name as exercise_name
+		FROM workouts w
+		LEFT JOIN sets s ON w.id = s.workout_id
+		LEFT JOIN exercises e ON s.exercise_id = e.id
+		ORDER BY w.date DESC, w.created_at DESC, s.created_at`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	var list []models.Workout
+	var current *models.Workout
 	for rows.Next() {
 		var w models.Workout
-		if err := rows.Scan(&w.ID, &w.Date, &w.Notes, &w.CreatedAt); err != nil {
+		var s models.Set
+		var sid sql.NullInt64
+		var sWorkoutID sql.NullInt64
+		var sExerciseID sql.NullInt64
+		var sReps sql.NullInt64
+		var sWeight sql.NullFloat64
+		var sRPE sql.NullFloat64
+		var sIsWarmup sql.NullInt64
+		var sExtra sql.NullString
+		var sNotes sql.NullString
+		var sCreatedAt sql.NullTime
+		var sExName sql.NullString
+
+		if err := rows.Scan(&w.ID, &w.Date, &w.Notes, &w.CreatedAt,
+			&sid, &sWorkoutID, &sExerciseID, &sReps, &sWeight, &sRPE, &sIsWarmup, &sExtra, &sNotes, &sCreatedAt, &sExName); err != nil {
 			return nil, err
 		}
-		list = append(list, w)
+
+		if current == nil || current.ID != w.ID {
+			if current != nil {
+				list = append(list, *current)
+			}
+			current = &w
+		}
+
+		if sid.Valid {
+			s.ID = sid.Int64
+			s.WorkoutID = sWorkoutID.Int64
+			s.ExerciseID = sExerciseID.Int64
+			s.Reps = int(sReps.Int64)
+			s.Weight = sWeight.Float64
+			if sRPE.Valid {
+				rpe := sRPE.Float64
+				s.RPE = &rpe
+			}
+			s.IsWarmup = sIsWarmup.Int64 != 0
+			s.Extra = sExtra.String
+			s.Notes = sNotes.String
+			s.CreatedAt = sCreatedAt.Time
+			s.ExerciseName = sExName.String
+			current.Sets = append(current.Sets, s)
+		}
+	}
+	if current != nil {
+		list = append(list, *current)
 	}
 	return list, rows.Err()
 }
@@ -216,7 +293,7 @@ func (db *DB) GetWorkout(id int64) (*models.Workout, error) {
 		return nil, err
 	}
 	rows, err := db.Query(`
-		SELECT s.id, s.workout_id, s.exercise_id, s.reps, s.weight, s.rpe, s.is_warmup, s.notes, s.created_at, e.name as exercise_name
+		SELECT s.id, s.workout_id, s.exercise_id, s.reps, s.weight, s.rpe, s.is_warmup, s.extra, s.notes, s.created_at, e.name as exercise_name
 		FROM sets s JOIN exercises e ON s.exercise_id = e.id
 		WHERE s.workout_id = ? ORDER BY s.created_at`, id)
 	if err != nil {
@@ -226,8 +303,7 @@ func (db *DB) GetWorkout(id int64) (*models.Workout, error) {
 
 	for rows.Next() {
 		var s models.Set
-		var ename string
-		if err := rows.Scan(&s.ID, &s.WorkoutID, &s.ExerciseID, &s.Reps, &s.Weight, &s.RPE, &s.IsWarmup, &s.Notes, &s.CreatedAt, &ename); err != nil {
+		if err := rows.Scan(&s.ID, &s.WorkoutID, &s.ExerciseID, &s.Reps, &s.Weight, &s.RPE, &s.IsWarmup, &s.Extra, &s.Notes, &s.CreatedAt, &s.ExerciseName); err != nil {
 			return nil, err
 		}
 		w.Sets = append(w.Sets, s)
@@ -248,8 +324,8 @@ func (db *DB) DeleteWorkout(id int64) error {
 // Set
 
 func (db *DB) AddSet(s *models.Set) error {
-	r := db.QueryRow("INSERT INTO sets(workout_id, exercise_id, reps, weight, rpe, is_warmup, notes) VALUES(?,?,?,?,?,?,?) RETURNING id, created_at",
-		s.WorkoutID, s.ExerciseID, s.Reps, s.Weight, s.RPE, s.IsWarmup, s.Notes)
+	r := db.QueryRow("INSERT INTO sets(workout_id, exercise_id, reps, weight, rpe, is_warmup, extra, notes) VALUES(?,?,?,?,?,?,?,?) RETURNING id, created_at",
+		s.WorkoutID, s.ExerciseID, s.Reps, s.Weight, s.RPE, s.IsWarmup, s.Extra, s.Notes)
 	return r.Scan(&s.ID, &s.CreatedAt)
 }
 
@@ -262,7 +338,7 @@ func (db *DB) DeleteSet(id int64) error {
 
 func (db *DB) GetExerciseStats(exerciseID int64) ([]models.Set, error) {
 	rows, err := db.Query(`
-		SELECT id, workout_id, exercise_id, reps, weight, rpe, is_warmup, notes, created_at
+		SELECT id, workout_id, exercise_id, reps, weight, rpe, is_warmup, extra, notes, created_at
 		FROM sets WHERE exercise_id = ? AND is_warmup = 0 ORDER BY created_at DESC LIMIT 50`, exerciseID)
 	if err != nil {
 		return nil, err
@@ -272,7 +348,7 @@ func (db *DB) GetExerciseStats(exerciseID int64) ([]models.Set, error) {
 	var list []models.Set
 	for rows.Next() {
 		var s models.Set
-		if err := rows.Scan(&s.ID, &s.WorkoutID, &s.ExerciseID, &s.Reps, &s.Weight, &s.RPE, &s.IsWarmup, &s.Notes, &s.CreatedAt); err != nil {
+		if err := rows.Scan(&s.ID, &s.WorkoutID, &s.ExerciseID, &s.Reps, &s.Weight, &s.RPE, &s.IsWarmup, &s.Extra, &s.Notes, &s.CreatedAt); err != nil {
 			return nil, err
 		}
 		list = append(list, s)
