@@ -22,6 +22,9 @@ func NewSQLite(path string) (*DB, error) {
 	if err := migrate(db); err != nil {
 		return nil, err
 	}
+	if err := seed(db); err != nil {
+		return nil, err
+	}
 	return &DB{db}, nil
 }
 
@@ -197,4 +200,99 @@ func (db *DB) GetVolumeByDate(start, end string) (map[string]float64, error) {
 		result[date] = vol
 	}
 	return result, rows.Err()
+}
+
+func seed(db *sql.DB) error {
+	var count int
+	if err := db.QueryRow("SELECT COUNT(*) FROM exercises").Scan(&count); err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+
+	exercises := []struct{ name, category string }{
+		// 胸部
+		{"杠铃卧推", "胸部"},
+		{"哑铃卧推", "胸部"},
+		{"上斜杠铃卧推", "胸部"},
+		{"上斜哑铃卧推", "胸部"},
+		{"哑铃飞鸟", "胸部"},
+		{"绳索夾胸", "胸部"},
+		{"俯卧撑", "胸部"},
+		{"双杠臂曲伸", "胸部"},
+		// 背部
+		{"引体向上", "背部"},
+		{"杠铃划船", "背部"},
+		{"哑铃单臂划船", "背部"},
+		{"高位下拉", "背部"},
+		{"坐姿划船", "背部"},
+		{"硬拉", "背部"},
+		{"直腿硬拉", "背部"},
+		{"反向飞鸟", "背部"},
+		{"山羊挺身", "背部"},
+		// 肩部
+		{"杠铃推举", "肩部"},
+		{"哑铃推举", "肩部"},
+		{"侧平举", "肩部"},
+		{"前平举", "肩部"},
+		{"俯身飞鸟", "肩部"},
+		{"面拉", "肩部"},
+		{"杠铃耸肩", "肩部"},
+		// 二头
+		{"杠铃弯举", "二头肌"},
+		{"哑铃弯举", "二头肌"},
+		{"锤式弯举", "二头肌"},
+		{"牧师凳弯举", "二头肌"},
+		{"集中弯举", "二头肌"},
+		// 三头
+		{"绳索下压", "三头肌"},
+		{"仰卧臂曲伸", "三头肌"},
+		{"窄距卧推", "三头肌"},
+		{"哑铃颈后臂曲伸", "三头肌"},
+		{"俯身臂曲伸", "三头肌"},
+		// 胯四头肌
+		{"深蹲", "胯四头肌"},
+		{"前蹲", "胯四头肌"},
+		{"腿举", "胯四头肌"},
+		{"腿伸屈", "胯四头肌"},
+		{"弓步蹲", "胯四头肌"},
+		{"保加利亚分腿蹲", "胯四头肌"},
+		// 膘绳肌
+		{"腿弯举", "膘绳肌"},
+		{"早安式", "膘绳肌"},
+		// 臀部
+		{"臀推", "臀部"},
+		{"壶铃摇摆", "臀部"},
+		{"绳索后踢腿", "臀部"},
+		// 核心
+		{"卷腹", "核心"},
+		{"悬垂举腿", "核心"},
+		{"平板支撑", "核心"},
+		{"俄罗斯转体", "核心"},
+		{"仰卧抬腿", "核心"},
+		// 有氧
+		{"跑步机", "有氧"},
+		{"椭圆机", "有氧"},
+		{"划船机", "有氧"},
+		{"战绳", "有氧"},
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	stmt, err := tx.Prepare("INSERT INTO exercises(name, category) VALUES(?,?)")
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	defer stmt.Close()
+	for _, e := range exercises {
+		if _, err := stmt.Exec(e.name, e.category); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	return tx.Commit()
 }
