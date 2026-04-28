@@ -172,12 +172,19 @@ $('#btn-add-set').addEventListener('click', async () => {
     body: JSON.stringify({ exercise_id, weight, reps, rpe, is_warmup: false })
   });
 
+  // 收起动作库面板
+  panelLibrary.style.display = 'none';
+
   // 清空输入
   $('#set-weight').value = '';
   $('#set-reps').value = '';
   $('#set-rpe').value = '';
   $('#warmup-weight').value = '';
   $('#warmup-reps').value = '';
+
+  // 收起热身组
+  $('#warmup-area').classList.add('hidden');
+
   await loadSets();
   loadWorkouts();
   toast('添加成功');
