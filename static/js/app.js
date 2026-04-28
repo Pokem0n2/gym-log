@@ -137,7 +137,14 @@ $('#btn-new-workout').addEventListener('click', async () => {
 
 // 热身组切换
 $('#btn-toggle-warmup').addEventListener('click', () => {
-  $('#warmup-area').classList.toggle('hidden');
+  const area = $('#warmup-area');
+  const wasHidden = area.classList.contains('hidden');
+  area.classList.toggle('hidden');
+  if (!wasHidden) {
+    // 收起时清空
+    $('#warmup-weight').value = '';
+    $('#warmup-reps').value = '';
+  }
 });
 
 $('#btn-add-set').addEventListener('click', async () => {
@@ -171,9 +178,6 @@ $('#btn-add-set').addEventListener('click', async () => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ exercise_id, weight, reps, rpe, is_warmup: false })
   });
-
-  // 收起动作库面板
-  panelLibrary.style.display = 'none';
 
   // 清空输入
   $('#set-weight').value = '';
