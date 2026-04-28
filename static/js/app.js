@@ -66,7 +66,7 @@ function collectFieldValues(fields, prefix) {
 function clearFieldValues(fields, prefix) {
   for (const key of fields) {
     const el = $(`#${prefix}-${key}`);
-    if (el) el.value = key === 'sets' ? '1' : '';
+    if (el) el.value = (key === 'sets' && prefix === 'warmup') ? '1' : '';
   }
 }
 
@@ -301,13 +301,15 @@ async function loadWorkouts() {
   }
 
   for (const [date, workouts] of Object.entries(byDate)) {
+    const validWorkouts = workouts.filter(w => w.sets && w.sets.length > 0);
+    if (validWorkouts.length === 0) continue;
+
     const dateH = document.createElement('div');
     dateH.style.cssText = 'font-weight:600;margin:10px 0 6px;color:var(--accent);';
     dateH.textContent = date;
     container.appendChild(dateH);
 
-    for (const w of workouts) {
-      if (!w.sets || w.sets.length === 0) continue;
+    for (const w of validWorkouts) {
       const hasSets = w.sets && w.sets.length > 0;
       const timeInfo = w.time_ranges && w.time_ranges.length > 0 ? w.time_ranges.join(', ') : '';
 
