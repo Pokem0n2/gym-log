@@ -328,8 +328,9 @@ func (db *DB) DeleteSet(id int64) error {
 
 func (db *DB) GetExerciseStats(exerciseID int64) ([]models.Set, error) {
 	rows, err := db.Query(`
-		SELECT id, workout_id, exercise_id, reps, weight, rpe, is_warmup, extra, notes, created_at
-		FROM sets WHERE exercise_id = ? AND is_warmup = 0 ORDER BY created_at DESC LIMIT 50`, exerciseID)
+		SELECT s.id, s.workout_id, s.exercise_id, s.reps, s.weight, s.rpe, s.is_warmup, s.extra, s.notes, s.created_at, w.date as workout_date
+		FROM sets s JOIN workouts w ON s.workout_id = w.id
+		WHERE s.exercise_id = ? AND s.is_warmup = 0 ORDER BY w.date DESC, s.created_at DESC LIMIT 50`, exerciseID)
 	if err != nil {
 		return nil, err
 	}
@@ -338,7 +339,7 @@ func (db *DB) GetExerciseStats(exerciseID int64) ([]models.Set, error) {
 	var list []models.Set
 	for rows.Next() {
 		var s models.Set
-		if err := rows.Scan(&s.ID, &s.WorkoutID, &s.ExerciseID, &s.Reps, &s.Weight, &s.RPE, &s.IsWarmup, &s.Extra, &s.Notes, &s.CreatedAt); err != nil {
+		if err := rows.Scan(&s.ID, &s.WorkoutID, &s.ExerciseID, &s.Reps, &s.Weight, &s.RPE, &s.IsWarmup, &s.Extra, &s.Notes, &s.CreatedAt, &s.WorkoutDate); err != nil {
 			return nil, err
 		}
 		list = append(list, s)

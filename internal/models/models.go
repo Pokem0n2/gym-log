@@ -34,4 +34,5 @@ type Set struct {
 	Extra        string    `json:"extra"`
 	Notes        string    `json:"notes"`
 	CreatedAt    time.Time `json:"created_at"`
+	WorkoutDate  string    `json:"workout_date,omitempty"`
 }

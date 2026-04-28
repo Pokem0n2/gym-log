@@ -85,16 +85,22 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     $(`#tab-${btn.dataset.tab}`).classList.add('active');
-    if (btn.dataset.tab === 'stats') loadStatExercises();
+    if (btn.dataset.tab === 'stats') loadStatCategories();
   });
 });
 
 // ========== 初始化 ==========
-const today = new Date().toISOString().split('T')[0];
-$('#train-date').value = today;
-$('#train-date').max = today;
-$('#stat-start').value = today;
-$('#stat-end').value = today;
+  // 默认训练量统计日期范围为近30天
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const startStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+  $('#train-date').value = todayStr;
+  $('#train-date').max = todayStr;
+  $('#stat-start').value = startStr;
+  $('#stat-end').value = todayStr;
 
 loadExercises();
 loadWorkouts();
@@ -216,8 +222,8 @@ function renderSetItem(s, list) {
     try { fields = JSON.parse(ex.fields); } catch {}
   }
 
-  // 根据 fields 构建简洁显示文本
-  const parts = [];
+// 根据 fields 构建简洁显示文本（带颜色）
+  const vals = [];
   const hasWeight = fields.includes('weight');
   for (const key of fields) {
     const meta = FIELD_META[key];
@@ -229,27 +235,34 @@ function renderSetItem(s, list) {
     else v = extra[key];
     if (v !== undefined && v !== null && v !== 0) {
       if (hasWeight) {
-        // 力量型：去掉标签，用 × @ 分隔
-        if (key === 'weight') parts.push(`${v}${meta.unit}`);
-        else if (key === 'reps') parts.push(`× ${v}${meta.unit}`);
-        else if (key === 'sets') parts.push(`@ ${v}${meta.unit}`);
-        else parts.push(`${v}${meta.unit}`);
+        vals.push(`${v}${meta.unit}`);
       } else {
-        // 非力量型：简化显示
-        if (key === 'duration') parts.push(`${v}min`);
-        else if (key === 'distance') parts.push(`${v}m`);
-        else parts.push(`${meta.label}${v}`);
+        if (key === 'duration') vals.push(`${v}min`);
+        else if (key === 'distance') vals.push(`${v}m`);
+        else vals.push(`${meta.label}${v}`);
       }
     }
   }
-  const text = hasWeight ? parts.join(' ') : parts.join(' / ');
+  let textHtml = '';
+  if (vals.length === 1) {
+    textHtml = `<span style="color:var(--accent)">${vals[0]}</span>`;
+  } else if (vals.length >= 2) {
+    textHtml = `<span style="color:var(--accent)">${vals[0]}</span>`;
+    for (let i = 1; i < vals.length - 1; i++) {
+      const sep = hasWeight ? ' × ' : ' / ';
+      textHtml += sep + vals[i];
+    }
+    const lastIdx = vals.length - 1;
+    const lastSep = hasWeight ? (lastIdx === 1 ? ' × ' : ' @ ') : ' / ';
+    textHtml += lastSep + `<span style="color:#0ea5e9">${vals[lastIdx]}</span>`;
+  }
 
   const div = document.createElement('div');
   div.className = `set-item ${warmupCls}`;
   div.innerHTML = `
     <div class="set-data">
       <span>${timeStr}</span>
-      <span class="set-val">${text}</span>
+      <span>${textHtml}</span>
       ${s.is_warmup ? '<span style="color:var(--secondary);font-size:12px;">[热身]</span>' : ''}
     </div>
     <button class="btn small danger" data-id="${s.id}">删除</button>
@@ -454,16 +467,30 @@ $('#btn-add-ex').addEventListener('click', async () => {
 });
 
 // ========== 统计 ==========
-function loadStatExercises() {
+function loadStatCategories() {
+  const sel = $('#stat-category');
+  sel.innerHTML = '<option value="">请选择</option>';
+  const cats = [...new Set(exercises.map(e => e.category).filter(Boolean))];
+  cats.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    sel.appendChild(opt);
+  });
+  $('#stat-exercise').innerHTML = '<option value="">请先选择分类</option>';
+}
+
+$('#stat-category').addEventListener('change', () => {
+  const cat = $('#stat-category').value;
   const sel = $('#stat-exercise');
   sel.innerHTML = '<option value="">请选择动作</option>';
-  exercises.forEach(e => {
+  exercises.filter(e => e.category === cat).forEach(e => {
     const opt = document.createElement('option');
     opt.value = e.id;
     opt.textContent = e.name;
     sel.appendChild(opt);
   });
-}
+});
 
 $('#btn-load-pr').addEventListener('click', async () => {
   const id = +$('#stat-exercise').value;
@@ -481,7 +508,7 @@ $('#btn-load-pr').addEventListener('click', async () => {
     } catch {}
   }
 
-  const labels = sets.map(s => new Date(s.created_at).toLocaleDateString('zh-CN')).reverse();
+  const labels = sets.map(s => s.workout_date || new Date(s.created_at).toLocaleDateString('zh-CN')).reverse();
 
   if (isStrength) {
     const data = sets.map(s => s.weight).reverse();
