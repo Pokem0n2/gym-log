@@ -216,8 +216,9 @@ function renderSetItem(s, list) {
     try { fields = JSON.parse(ex.fields); } catch {}
   }
 
-  // 根据 fields 构建显示文本
+  // 根据 fields 构建简洁显示文本
   const parts = [];
+  const hasWeight = fields.includes('weight');
   for (const key of fields) {
     const meta = FIELD_META[key];
     if (!meta) continue;
@@ -227,16 +228,28 @@ function renderSetItem(s, list) {
     else if (key === 'sets') v = s.rpe;
     else v = extra[key];
     if (v !== undefined && v !== null && v !== 0) {
-      parts.push(`${meta.label}${v}${meta.unit}`);
+      if (hasWeight) {
+        // 力量型：去掉标签，用 × @ 分隔
+        if (key === 'weight') parts.push(`${v}${meta.unit}`);
+        else if (key === 'reps') parts.push(`× ${v}${meta.unit}`);
+        else if (key === 'sets') parts.push(`@ ${v}${meta.unit}`);
+        else parts.push(`${v}${meta.unit}`);
+      } else {
+        // 非力量型：简化显示
+        if (key === 'duration') parts.push(`${v}min`);
+        else if (key === 'distance') parts.push(`${v}m`);
+        else parts.push(`${meta.label}${v}`);
+      }
     }
   }
+  const text = hasWeight ? parts.join(' ') : parts.join(' / ');
 
   const div = document.createElement('div');
   div.className = `set-item ${warmupCls}`;
   div.innerHTML = `
     <div class="set-data">
       <span>${timeStr}</span>
-      <strong>${parts.join(' / ')}</strong>
+      <span class="set-val">${text}</span>
       ${s.is_warmup ? '<span style="color:var(--secondary);font-size:12px;">[热身]</span>' : ''}
     </div>
     <button class="btn small danger" data-id="${s.id}">删除</button>

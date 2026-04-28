@@ -208,7 +208,7 @@ input:focus, select:focus { border-color: var(--accent); }
 }
 
 .set-data { font-size: 15px; }
-.set-data strong { color: var(--accent); }
+.set-data .set-val { color: var(--text); font-weight: 500; margin: 0 6px; }
 
 .set-warmup {
   border-left: 3px solid var(--secondary);
