@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/Pokem0n2/gym-log/internal/models"
 	_ "modernc.org/sqlite"
