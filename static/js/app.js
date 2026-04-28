@@ -44,7 +44,7 @@ function renderFieldInputs(containerId, fields, prefix) {
     div.className = 'field';
     const inputId = `${prefix}-${key}`;
     div.innerHTML = `<label>${meta.label} (${meta.unit})</label>
-      <input type="${meta.type}" id="${inputId}" step="${meta.step}" min="${meta.min || 0}" ${key === 'sets' ? 'value="1"' : ''}>`;
+      <input type="${meta.type}" id="${inputId}" step="${meta.step}" min="${meta.min || 0}" ${key === 'sets' && prefix === 'warmup' ? 'value="1"' : ''}>`;
     container.appendChild(div);
   }
 }
@@ -307,6 +307,7 @@ async function loadWorkouts() {
     container.appendChild(dateH);
 
     for (const w of workouts) {
+      if (!w.sets || w.sets.length === 0) continue;
       const hasSets = w.sets && w.sets.length > 0;
       const timeInfo = w.time_ranges && w.time_ranges.length > 0 ? w.time_ranges.join(', ') : '';
 

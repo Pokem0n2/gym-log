@@ -86,6 +86,7 @@ input, select {
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
+  font-family: inherit;
   font-size: 16px;
   outline: none;
   transition: border-color .2s;
@@ -259,8 +260,12 @@ input:focus, select:focus { border-color: var(--accent); }
   background: var(--surface);
 }
 
-.ex-group.collapsed .ex-group-body {
-  display: none;
+.ex-group.collapsed .ex-group-body { display: none; }
+
+/* 字段配置复选框 */
+#ex-fields-wrap label {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* 图表 */
