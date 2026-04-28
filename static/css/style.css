@@ -227,6 +227,7 @@ input:focus, select:focus { border-color: var(--accent); }
   font-weight: 600;
   font-size: 15px;
   user-select: none;
+  color: var(--accent);
 }
 
 .ex-group-header:hover { background: var(--surface-hover); }

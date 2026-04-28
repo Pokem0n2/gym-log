@@ -172,10 +172,12 @@ $('#btn-add-set').addEventListener('click', async () => {
     body: JSON.stringify({ exercise_id, weight, reps, rpe, is_warmup: false })
   });
 
-  // 清空正常组输入
+  // 清空输入
   $('#set-weight').value = '';
   $('#set-reps').value = '';
   $('#set-rpe').value = '';
+  $('#warmup-weight').value = '';
+  $('#warmup-reps').value = '';
   await loadSets();
   loadWorkouts();
   toast('添加成功');
@@ -230,7 +232,7 @@ async function loadSets() {
 
   for (const [name, sets] of Object.entries(groups)) {
     const h = document.createElement('div');
-    h.style.cssText = 'font-weight:600;margin:10px 0 6px;color:var(--accent);';
+    h.style.cssText = 'font-weight:600;margin:10px 0 6px;color:var(--text);';
     h.textContent = name;
     list.appendChild(h);
 
