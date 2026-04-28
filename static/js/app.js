@@ -236,12 +236,12 @@ function renderSetItem(s, list) {
   div.innerHTML = `
     <div class="set-data">
       <span>${timeStr}</span>
-      ${s.is_warmup ? '<span style="color:var(--secondary);font-size:12px;">[热身]</span>' : ''}
       <strong>${parts.join(' / ')}</strong>
+      ${s.is_warmup ? '<span style="color:var(--secondary);font-size:12px;">[热身]</span>' : ''}
     </div>
-    <button class="btn-delete" data-id="${s.id}">删除</button>
+    <button class="btn small danger" data-id="${s.id}">删除</button>
   `;
-  div.querySelector('.btn-delete').addEventListener('click', async () => {
+  div.querySelector('.btn.small.danger').addEventListener('click', async () => {
     await req(`/sets/${s.id}`, { method: 'DELETE' });
     await loadSets();
     loadWorkouts();
@@ -314,7 +314,7 @@ async function loadWorkouts() {
       div.className = 'workout-item';
       div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;';
       div.innerHTML = `<span>${timeInfo || '未开始训练'}</span>
-        <span style="color:var(--secondary);font-size:13px;">${hasSets ? w.sets.length + '组' : '空'}</span>`;
+        <span style="color:var(--secondary);font-size:13px;">${hasSets ? w.sets.length + '次数据录入' : '空'}</span>`;
       div.addEventListener('click', () => {
         currentWorkoutId = w.id;
         $('#workout-area').classList.remove('hidden');
@@ -431,7 +431,7 @@ $('#btn-add-ex').addEventListener('click', async () => {
   $('#ex-category').value = '';
   // 重置复选框
   $('#ex-fields-wrap').querySelectorAll('input').forEach(cb => {
-    cb.checked = ['weight', 'reps'].includes(cb.value);
+    cb.checked = ['weight', 'reps', 'sets'].includes(cb.value);
   });
   await loadExercises();
   toast('动作已添加');
