@@ -69,26 +69,81 @@ func migrate(db *sql.DB) error {
 }
 
 func migrateExerciseFields(db *sql.DB) error {
-	// 已有数据的字段映射
-	defaults := map[string]string{
-		"俯卧撑":   `["reps","sets"]`,
-		"引体向上": `["reps","sets"]`,
-		"卷腹":     `["reps","sets"]`,
-		"悬垂举腿": `["reps","sets"]`,
-		"平板支撑": `["duration","sets"]`,
-		"俄罗斯转体": `["reps","sets"]`,
-		"仰卧抬腿": `["reps","sets"]`,
-		"跑步机":   `["speed","incline","duration"]`,
-		"椭圆机":   `["resistance","incline","duration"]`,
-		"划船机":   `["distance","duration"]`,
-		"战绳":     `["duration","sets"]`,
-	}
-	for name, fields := range defaults {
-		_, _ = db.Exec("UPDATE exercises SET fields = ? WHERE name = ? AND (fields IS NULL OR fields = '')", fields, name)
+	// 无条件更新所有预设动作的 fields，确保与代码中的定义一致
+	for _, e := range presetExercises {
+		_, _ = db.Exec("UPDATE exercises SET fields = ? WHERE name = ?", e.fields, e.name)
 	}
 	// 其余未设置的动作，默认为力量型
 	_, _ = db.Exec("UPDATE exercises SET fields = '[\"weight\",\"reps\",\"sets\"]' WHERE fields IS NULL OR fields = ''")
 	return nil
+}
+
+// 预设动作列表（seed 和迁移共用）
+var presetExercises = []struct{ name, category, fields string }{
+	// 胸部
+	{"杠铃卧推", "胸部", `["weight","reps","sets"]`},
+	{"哑铃卧推", "胸部", `["weight","reps","sets"]`},
+	{"上斜杠铃卧推", "胸部", `["weight","reps","sets"]`},
+	{"上斜哑铃卧推", "胸部", `["weight","reps","sets"]`},
+	{"哑铃飞鸟", "胸部", `["weight","reps","sets"]`},
+	{"绳索夹胸", "胸部", `["weight","reps","sets"]`},
+	{"俯卧撑", "胸部", `["reps","sets"]`},
+	{"双杠臂曲伸", "胸部", `["reps","sets"]`},
+	// 背部
+	{"引体向上", "背部", `["reps","sets"]`},
+	{"杠铃划船", "背部", `["weight","reps","sets"]`},
+	{"哑铃单臂划船", "背部", `["weight","reps","sets"]`},
+	{"高位下拉", "背部", `["weight","reps","sets"]`},
+	{"坐姿划船", "背部", `["weight","reps","sets"]`},
+	{"硬拉", "背部", `["weight","reps","sets"]`},
+	{"直腿硬拉", "背部", `["weight","reps","sets"]`},
+	{"反向飞鸟", "背部", `["weight","reps","sets"]`},
+	{"山羊挺身", "背部", `["weight","reps","sets"]`},
+	// 肩部
+	{"杠铃推举", "肩部", `["weight","reps","sets"]`},
+	{"哑铃推举", "肩部", `["weight","reps","sets"]`},
+	{"侧平举", "肩部", `["weight","reps","sets"]`},
+	{"前平举", "肩部", `["weight","reps","sets"]`},
+	{"俯身飞鸟", "肩部", `["weight","reps","sets"]`},
+	{"面拉", "肩部", `["weight","reps","sets"]`},
+	{"杠铃耸肩", "肩部", `["weight","reps","sets"]`},
+	// 二头肌
+	{"杠铃弯举", "二头肌", `["weight","reps","sets"]`},
+	{"哑铃弯举", "二头肌", `["weight","reps","sets"]`},
+	{"锤式弯举", "二头肌", `["weight","reps","sets"]`},
+	{"牧师凳弯举", "二头肌", `["weight","reps","sets"]`},
+	{"集中弯举", "二头肌", `["weight","reps","sets"]`},
+	// 三头肌
+	{"绳索下压", "三头肌", `["weight","reps","sets"]`},
+	{"仰卧臂曲伸", "三头肌", `["weight","reps","sets"]`},
+	{"窄距卧推", "三头肌", `["weight","reps","sets"]`},
+	{"哑铃颈后臂曲伸", "三头肌", `["weight","reps","sets"]`},
+	{"俯身臂曲伸", "三头肌", `["weight","reps","sets"]`},
+	// 胯四头肌
+	{"深蹲", "胯四头肌", `["weight","reps","sets"]`},
+	{"前蹲", "胯四头肌", `["weight","reps","sets"]`},
+	{"腿举", "胯四头肌", `["weight","reps","sets"]`},
+	{"腿伸屈", "胯四头肌", `["weight","reps","sets"]`},
+	{"弓步蹲", "胯四头肌", `["weight","reps","sets"]`},
+	{"保加利亚分腿蹲", "胯四头肌", `["weight","reps","sets"]`},
+	// 膘绳肌
+	{"腿弯举", "膘绳肌", `["weight","reps","sets"]`},
+	{"早安式", "膘绳肌", `["weight","reps","sets"]`},
+	// 臀部
+	{"臀推", "臀部", `["weight","reps","sets"]`},
+	{"壶铃摆摇", "臀部", `["weight","reps","sets"]`},
+	{"绳索后踢腿", "臀部", `["weight","reps","sets"]`},
+	// 核心
+	{"卷腹", "核心", `["reps","sets"]`},
+	{"悬垂举腿", "核心", `["reps","sets"]`},
+	{"平板支撑", "核心", `["duration","sets"]`},
+	{"俄罗斯转体", "核心", `["reps","sets"]`},
+	{"仰卧抬腿", "核心", `["reps","sets"]`},
+	// 有氧
+	{"跑步机", "有氧", `["speed","incline","duration"]`},
+	{"椭圆机", "有氧", `["resistance","incline","duration"]`},
+	{"划船机", "有氧", `["distance","duration"]`},
+	{"战绳", "有氧", `["duration","sets"]`},
 }
 
 func seed(db *sql.DB) error {
@@ -100,72 +155,7 @@ func seed(db *sql.DB) error {
 		return nil
 	}
 
-	exercises := []struct{ name, category, fields string }{
-		// 胸部
-		{"杠铃卧推", "胸部", `["weight","reps","sets"]`},
-		{"哑铃卧推", "胸部", `["weight","reps","sets"]`},
-		{"上斜杠铃卧推", "胸部", `["weight","reps","sets"]`},
-		{"上斜哑铃卧推", "胸部", `["weight","reps","sets"]`},
-		{"哑铃飞鸟", "胸部", `["weight","reps","sets"]`},
-		{"绳索夹胸", "胸部", `["weight","reps","sets"]`},
-		{"俯卧撑", "胸部", `["reps","sets"]`},
-		{"双杠臂曲伸", "胸部", `["reps","sets"]`},
-		// 背部
-		{"引体向上", "背部", `["reps","sets"]`},
-		{"杠铃划船", "背部", `["weight","reps","sets"]`},
-		{"哑铃单臂划船", "背部", `["weight","reps","sets"]`},
-		{"高位下拉", "背部", `["weight","reps","sets"]`},
-		{"坐姿划船", "背部", `["weight","reps","sets"]`},
-		{"硬拉", "背部", `["weight","reps","sets"]`},
-		{"直腿硬拉", "背部", `["weight","reps","sets"]`},
-		{"反向飞鸟", "背部", `["weight","reps","sets"]`},
-		{"山羊挺身", "背部", `["weight","reps","sets"]`},
-		// 肩部
-		{"杠铃推举", "肩部", `["weight","reps","sets"]`},
-		{"哑铃推举", "肩部", `["weight","reps","sets"]`},
-		{"侧平举", "肩部", `["weight","reps","sets"]`},
-		{"前平举", "肩部", `["weight","reps","sets"]`},
-		{"俯身飞鸟", "肩部", `["weight","reps","sets"]`},
-		{"面拉", "肩部", `["weight","reps","sets"]`},
-		{"杠铃耸肩", "肩部", `["weight","reps","sets"]`},
-		// 二头肌
-		{"杠铃弯举", "二头肌", `["weight","reps","sets"]`},
-		{"哑铃弯举", "二头肌", `["weight","reps","sets"]`},
-		{"锤式弯举", "二头肌", `["weight","reps","sets"]`},
-		{"牧师凳弯举", "二头肌", `["weight","reps","sets"]`},
-		{"集中弯举", "二头肌", `["weight","reps","sets"]`},
-		// 三头肌
-		{"绳索下压", "三头肌", `["weight","reps","sets"]`},
-		{"仰卧臂曲伸", "三头肌", `["weight","reps","sets"]`},
-		{"窄距卧推", "三头肌", `["weight","reps","sets"]`},
-		{"哑铃颈后臂曲伸", "三头肌", `["weight","reps","sets"]`},
-		{"俯身臂曲伸", "三头肌", `["weight","reps","sets"]`},
-		// 胯四头肌
-		{"深蹲", "胯四头肌", `["weight","reps","sets"]`},
-		{"前蹲", "胯四头肌", `["weight","reps","sets"]`},
-		{"腿举", "胯四头肌", `["weight","reps","sets"]`},
-		{"腿伸屈", "胯四头肌", `["weight","reps","sets"]`},
-		{"弓步蹲", "胯四头肌", `["weight","reps","sets"]`},
-		{"保加利亚分腿蹲", "胯四头肌", `["weight","reps","sets"]`},
-		// 膘绳肌
-		{"腿弯举", "膘绳肌", `["weight","reps","sets"]`},
-		{"早安式", "膘绳肌", `["weight","reps","sets"]`},
-		// 臀部
-		{"臀推", "臀部", `["weight","reps","sets"]`},
-		{"壶铃摇摆", "臀部", `["weight","reps","sets"]`},
-		{"绳索后踢腿", "臀部", `["weight","reps","sets"]`},
-		// 核心
-		{"卷腹", "核心", `["reps","sets"]`},
-		{"悬垂举腿", "核心", `["reps","sets"]`},
-		{"平板支撑", "核心", `["duration","sets"]`},
-		{"俄罗斯转体", "核心", `["reps","sets"]`},
-		{"仰卧抬腿", "核心", `["reps","sets"]`},
-		// 有氧
-		{"跑步机", "有氧", `["speed","incline","duration"]`},
-		{"椭圆机", "有氧", `["resistance","incline","duration"]`},
-		{"划船机", "有氧", `["distance","duration"]`},
-		{"战绳", "有氧", `["duration","sets"]`},
-	}
+	exercises := presetExercises
 
 	tx, err := db.Begin()
 	if err != nil {
