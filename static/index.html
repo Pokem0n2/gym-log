@@ -63,15 +63,19 @@
         <label>分类</label>
         <input type="text" id="ex-category" placeholder="例如：胸部">
         <label>字段配置</label>
-        <div id="ex-fields-wrap" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;">
-          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="weight" checked> 重量</label>
-          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="reps" checked> 次数</label>
-          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="sets" checked> 组数</label>
-          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="duration"> 时长</label>
-          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="speed"> 速度</label>
-          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="incline"> 坡度</label>
-          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="resistance"> 阻尼</label>
-          <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="distance"> 距离</label>
+        <div id="ex-fields-wrap" style="display:flex;flex-direction:column;gap:8px;margin:8px 0;">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="weight" checked> 重量</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="reps" checked> 次数</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="sets" checked> 组数</label>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="duration"> 时长</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="speed"> 速度</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="incline"> 坡度</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="resistance"> 阻尼</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:normal;margin:0;cursor:pointer;"><input type="checkbox" value="distance"> 距离</label>
+          </div>
         </div>
         <button id="btn-add-ex" class="btn primary">添加动作</button>
       </div>
