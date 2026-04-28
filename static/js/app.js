@@ -121,22 +121,23 @@ $('#btn-toggle-warmup').addEventListener('click', () => {
   area.classList.toggle('hidden');
   const fields = getCurrentFields();
   if (wasHidden) {
-    renderFieldInputs('warmup-fields', fields, 'warmup');
+    renderFieldInputs('#warmup-fields', fields, 'warmup');
   } else {
     clearFieldValues(fields, 'warmup');
   }
 });
+
 // 动作选择变化：动态渲染表单
 $('#sel-exercise').addEventListener('change', () => {
   const fields = getCurrentFields();
-  renderFieldInputs('normal-fields', fields, 'normal');
+  renderFieldInputs('#normal-fields', fields, 'normal');
   if (!$('#warmup-area').classList.contains('hidden')) {
-    renderFieldInputs('warmup-fields', fields, 'warmup');
+    renderFieldInputs('#warmup-fields', fields, 'warmup');
   }
 });
 
 // 初始渲染一次表单
-renderFieldInputs('normal-fields', ['weight', 'reps', 'sets'], 'normal');
+renderFieldInputs('#normal-fields', ['weight', 'reps', 'sets'], 'normal');
 
 $('#btn-add-set').addEventListener('click', async () => {
   if (!currentWorkoutId) return toast('请先创建训练');
@@ -364,58 +365,47 @@ $('#sel-category').addEventListener('change', () => {
   });
   // 重新渲染表单
   const fields = getCurrentFields();
-  renderFieldInputs('normal-fields', fields, 'normal');
+  renderFieldInputs('#normal-fields', fields, 'normal');
 });
 
 function renderExerciseLibrary() {
   const list = $('#ex-list');
   list.innerHTML = '';
-  const cats = {};
-  for (const e of exercises) {
-    const c = e.category || '未分类';
-    if (!cats[c]) cats[c] = [];
-    cats[c].push(e);
-  }
+  const groups = {};
+  exercises.forEach(e => {
+    const cat = e.category || '未分类';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(e);
+  });
 
-  for (const [cat, items] of Object.entries(cats)) {
+  for (const [cat, items] of Object.entries(groups)) {
     const group = document.createElement('div');
-    group.className = 'ex-group';
-
-    const header = document.createElement('div');
-    header.className = 'ex-group-header';
-    header.innerHTML = `<span>${cat}</span><span style="margin-left:auto;font-size:12px;color:var(--secondary);">▼</span>`;
-    header.addEventListener('click', () => {
-      const content = group.querySelector('.ex-group-content');
-      content.classList.toggle('hidden');
-      header.querySelector('span:last-child').textContent = content.classList.contains('hidden') ? '▶' : '▼';
-    });
-
-    const content = document.createElement('div');
-    content.className = 'ex-group-content hidden';
-    for (const e of items) {
+    group.className = 'ex-group collapsed';
+    group.innerHTML = `
+      <div class="ex-group-header">${cat}</div>
+      <div class="ex-group-body"></div>
+    `;
+    const body = group.querySelector('.ex-group-body');
+    items.forEach(e => {
       const div = document.createElement('div');
-      div.className = 'ex-item';
-      let fieldsStr = '';
-      if (e.fields) {
-        try {
-          const f = JSON.parse(e.fields);
-          fieldsStr = f.map(k => FIELD_META[k]?.label || k).join(' / ');
-        } catch {}
-      }
-      div.innerHTML = `<span>${e.name}</span>
-        <span style="color:var(--secondary);font-size:12px;">${fieldsStr}</span>
-        <button class="btn-delete" data-id="${e.id}">删除</button>`;
-      div.querySelector('.btn-delete').addEventListener('click', async (ev) => {
-        ev.stopPropagation();
+      div.className = 'item';
+      div.innerHTML = `
+        <div class="item-info">
+          <div class="item-title">${e.name}</div>
+        </div>
+        <button class="btn small danger" data-id="${e.id}">删除</button>
+      `;
+      div.querySelector('button').addEventListener('click', async () => {
         if (!confirm('确定删除？')) return;
         await req(`/exercises/${e.id}`, { method: 'DELETE' });
         await loadExercises();
+        toast('已删除');
       });
-      content.appendChild(div);
-    }
-
-    group.appendChild(header);
-    group.appendChild(content);
+      body.appendChild(div);
+    });
+    group.querySelector('.ex-group-header').addEventListener('click', () => {
+      group.classList.toggle('collapsed');
+    });
     list.appendChild(group);
   }
 }
