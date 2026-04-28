@@ -4,7 +4,6 @@ let exercises = [];
 let prChart = null;
 let volChart = null;
 
-// 工具
 function $(s) { return document.querySelector(s); }
 function toast(msg) {
   const t = $('#toast');
@@ -43,34 +42,70 @@ $('#stat-start').valueAsDate = d30;
 // ========== 动作库 ==========
 async function loadExercises() {
   exercises = await req('/exercises');
-  const sel = $('#sel-exercise');
-  const statSel = $('#stat-exercise');
-  sel.innerHTML = '<option value="">请选择</option>';
-  statSel.innerHTML = '<option value="">请选择</option>';
-  exercises.forEach(e => {
-    sel.add(new Option(e.name, e.id));
-    statSel.add(new Option(e.name, e.id));
-  });
 
+  // 训练页面：分类 + 动作 两级联动
+  const catSel = $('#sel-category');
+  const exSel = $('#sel-exercise');
+  const statSel = $('#stat-exercise');
+
+  // 保留当前选择（如果刷新）
+  const oldCat = catSel.value;
+  catSel.innerHTML = '<option value="">请选择</option>';
+  exSel.innerHTML = '<option value="">请先选择分类</option>';
+  statSel.innerHTML = '<option value="">请选择</option>';
+
+  const cats = [...new Set(exercises.map(e => e.category).filter(Boolean))];
+  cats.forEach(c => catSel.add(new Option(c, c)));
+  exercises.forEach(e => statSel.add(new Option(e.name, e.id)));
+
+  catSel.onchange = () => {
+    exSel.innerHTML = '<option value="">请选择</option>';
+    const cat = catSel.value;
+    if (!cat) return;
+    exercises.filter(e => e.category === cat).forEach(e => {
+      exSel.add(new Option(e.name, e.id));
+    });
+  };
+
+  // 动作库页面：按分类折叠，默认折叠
   const list = $('#ex-list');
   list.innerHTML = '';
+  const groups = {};
   exercises.forEach(e => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <div class="item-info">
-        <div class="item-title">${e.name}</div>
-        <div class="item-meta">${e.category || '未分类'}</div>
-      </div>
-      <button class="btn small danger" data-id="${e.id}">删除</button>
-    `;
-    div.querySelector('button').addEventListener('click', async () => {
-      await req(`/exercises/${e.id}`, { method: 'DELETE' });
-      loadExercises();
-      toast('已删除');
-    });
-    list.appendChild(div);
+    const cat = e.category || '未分类';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(e);
   });
+
+  for (const [cat, items] of Object.entries(groups)) {
+    const group = document.createElement('div');
+    group.className = 'ex-group collapsed';
+    group.innerHTML = `
+      <div class="ex-group-header">${cat} <span style="color:var(--text-secondary);font-size:13px;">(${items.length})</span></div>
+      <div class="ex-group-body"></div>
+    `;
+    const body = group.querySelector('.ex-group-body');
+    items.forEach(e => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `
+        <div class="item-info">
+          <div class="item-title">${e.name}</div>
+        </div>
+        <button class="btn small danger" data-id="${e.id}">删除</button>
+      `;
+      div.querySelector('button').addEventListener('click', async () => {
+        await req(`/exercises/${e.id}`, { method: 'DELETE' });
+        loadExercises();
+        toast('已删除');
+      });
+      body.appendChild(div);
+    });
+    group.querySelector('.ex-group-header').addEventListener('click', () => {
+      group.classList.toggle('collapsed');
+    });
+    list.appendChild(group);
+  }
 }
 
 $('#btn-add-ex').addEventListener('click', async () => {
@@ -101,24 +136,49 @@ $('#btn-new-workout').addEventListener('click', async () => {
   toast('训练已创建，开始记录');
 });
 
+// 热身组切换
+$('#btn-toggle-warmup').addEventListener('click', () => {
+  $('#warmup-area').classList.toggle('hidden');
+});
+
 $('#btn-add-set').addEventListener('click', async () => {
   if (!currentWorkoutId) return toast('请先创建训练');
   const exercise_id = +$('#sel-exercise').value;
+  if (!exercise_id) return toast('请选择动作');
+
   const weight = +$('#set-weight').value;
   const reps = +$('#set-reps').value;
   const rpe = $('#set-rpe').value ? +$('#set-rpe').value : null;
-  if (!exercise_id) return toast('请选择动作');
-  if (!weight || !reps) return toast('请填写重量和次数');
+  if (!weight || !reps) return toast('请填写重量和每组次数');
 
+  // 热身组
+  const warmupArea = $('#warmup-area');
+  if (!warmupArea.classList.contains('hidden')) {
+    const ww = +$('#warmup-weight').value;
+    const wr = +$('#warmup-reps').value;
+    const wrpe = $('#warmup-rpe').value ? +$('#warmup-rpe').value : 1;
+    if (ww && wr) {
+      await req(`/workouts/${currentWorkoutId}/sets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exercise_id, weight: ww, reps: wr, rpe: wrpe, is_warmup: true })
+      });
+    }
+  }
+
+  // 正常组
   await req(`/workouts/${currentWorkoutId}/sets`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ exercise_id, weight, reps, rpe })
+    body: JSON.stringify({ exercise_id, weight, reps, rpe, is_warmup: false })
   });
+
+  // 清空正常组输入
   $('#set-weight').value = '';
   $('#set-reps').value = '';
   $('#set-rpe').value = '';
   loadSets();
+  toast('添加成功');
 });
 
 async function loadSets() {
@@ -147,12 +207,18 @@ async function loadSets() {
     h.textContent = name;
     list.appendChild(h);
     sets.forEach(s => {
+      const d = new Date(s.created_at);
+      const timeStr = d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const rpeStr = s.rpe ? (s.rpe == 1 ? `@${s.rpe}rep` : `@${s.rpe}reps`) : '';
+      const warmupCls = s.is_warmup ? 'set-warmup' : '';
       const div = document.createElement('div');
-      div.className = 'set-item';
+      div.className = `set-item ${warmupCls}`;
       div.innerHTML = `
         <span class="set-data">
           <strong>${s.weight}kg</strong> × ${s.reps}
-          ${s.rpe ? `<span style="color:var(--text-secondary)">@RPE${s.rpe}</span>` : ''}
+          ${rpeStr ? `<span style="color:var(--text-secondary)">${rpeStr}</span>` : ''}
+          <span class="set-time">${timeStr}</span>
+          ${s.is_warmup ? '<span style="color:var(--secondary);font-size:12px;">[热身]</span>' : ''}
         </span>
         <button class="btn small danger" data-id="${s.id}">删</button>
       `;

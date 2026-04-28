@@ -25,23 +25,47 @@
 
       <div id="workout-area" class="hidden">
         <div class="card">
+          <label>分类</label>
+          <select id="sel-category"><option value="">请选择</option></select>
           <label>动作</label>
-          <select id="sel-exercise"></select>
+          <select id="sel-exercise"><option value="">请先选择分类</option></select>
+
+          <div id="warmup-area" class="hidden">
+            <div class="warmup-title">热身组</div>
+            <div class="row">
+              <div class="field">
+                <label>热身重量 (kg)</label>
+                <input type="number" id="warmup-weight" step="0.5" min="0">
+              </div>
+              <div class="field">
+                <label>热身每组次数</label>
+                <input type="number" id="warmup-reps" min="1">
+              </div>
+              <div class="field">
+                <label>热身组数</label>
+                <input type="number" id="warmup-rpe" min="1" value="1">
+              </div>
+            </div>
+          </div>
+
           <div class="row">
             <div class="field">
               <label>重量 (kg)</label>
               <input type="number" id="set-weight" step="0.5" min="0">
             </div>
             <div class="field">
-              <label>次数</label>
+              <label>每组次数 (个)</label>
               <input type="number" id="set-reps" min="1">
             </div>
             <div class="field">
-              <label>RPE</label>
-              <input type="number" id="set-rpe" step="0.5" min="1" max="10">
+              <label>组数 (reps)</label>
+              <input type="number" id="set-rpe" min="1">
             </div>
           </div>
-          <button id="btn-add-set" class="btn primary">添加组</button>
+          <div class="btn-row">
+            <button id="btn-toggle-warmup" class="btn secondary">热身组</button>
+            <button id="btn-add-set" class="btn primary">添加组</button>
+          </div>
         </div>
 
         <div class="card">

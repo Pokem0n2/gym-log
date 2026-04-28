@@ -27,6 +27,7 @@ type Set struct {
 	Reps       int       `json:"reps" binding:"required,min=1"`
 	Weight     float64   `json:"weight" binding:"required,min=0"`
 	RPE        *float64  `json:"rpe,omitempty"`
+	IsWarmup   bool      `json:"is_warmup"`
 	Notes      string    `json:"notes"`
 	CreatedAt  time.Time `json:"created_at"`
 }
