@@ -176,7 +176,8 @@ $('#btn-add-set').addEventListener('click', async () => {
   $('#set-weight').value = '';
   $('#set-reps').value = '';
   $('#set-rpe').value = '';
-  loadSets();
+  await loadSets();
+  loadWorkouts();
   toast('添加成功');
 });
 
