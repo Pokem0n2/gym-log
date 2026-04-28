@@ -23,6 +23,10 @@ func (h *WorkoutHandler) List(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	for i := range list {
+		ranges, _ := h.db.GetWorkoutTimeRanges(list[i].ID)
+		list[i].TimeRanges = ranges
+	}
 	c.JSON(http.StatusOK, list)
 }
 

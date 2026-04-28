@@ -12,11 +12,12 @@ type Exercise struct {
 
 // Workout 训练记录
 type Workout struct {
-	ID        int64     `json:"id"`
-	Date      string    `json:"date" binding:"required"`
-	Notes     string    `json:"notes"`
-	Sets      []Set     `json:"sets,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	ID         int64     `json:"id"`
+	Date       string    `json:"date" binding:"required"`
+	Notes      string    `json:"notes"`
+	Sets       []Set     `json:"sets,omitempty"`
+	TimeRanges []string  `json:"time_ranges,omitempty"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // Set 单组记录

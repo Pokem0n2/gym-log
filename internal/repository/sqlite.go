@@ -192,7 +192,7 @@ func (db *DB) DeleteExercise(id int64) error {
 // Workout CRUD
 
 func (db *DB) ListWorkouts() ([]models.Workout, error) {
-	rows, err := db.Query("SELECT id, date, notes, created_at FROM workouts ORDER BY date DESC")
+	rows, err := db.Query("SELECT id, date, notes, created_at FROM workouts ORDER BY date DESC, created_at DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -300,4 +300,54 @@ func (db *DB) GetVolumeByDate(start, end string) (map[string]float64, error) {
 		result[date] = vol
 	}
 	return result, rows.Err()
+}
+
+func (db *DB) GetWorkoutTimeRanges(workoutID int64) ([]string, error) {
+	rows, err := db.Query("SELECT created_at FROM sets WHERE workout_id = ? ORDER BY created_at", workoutID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var times []time.Time
+	for rows.Next() {
+		var t time.Time
+		if err := rows.Scan(&t); err != nil {
+			return nil, err
+		}
+		times = append(times, t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if len(times) == 0 {
+		return nil, nil
+	}
+
+	const twoHours = 2 * time.Hour
+	var ranges []string
+	start := times[0]
+	end := times[0]
+	loc := time.FixedZone("CST", 8*3600)
+
+	for i := 1; i < len(times); i++ {
+		if times[i].Sub(end) <= twoHours {
+			end = times[i]
+		} else {
+			ranges = append(ranges, formatTimeRange(start, end, loc))
+			start = times[i]
+			end = times[i]
+		}
+	}
+	ranges = append(ranges, formatTimeRange(start, end, loc))
+	return ranges, nil
+}
+
+func formatTimeRange(start, end time.Time, loc *time.Location) string {
+	s := start.In(loc).Format("15:04")
+	e := end.In(loc).Format("15:04")
+	if s == e {
+		return s
+	}
+	return s + "~" + e
 }

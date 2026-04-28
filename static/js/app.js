@@ -48,7 +48,6 @@ async function loadExercises() {
   const exSel = $('#sel-exercise');
   const statSel = $('#stat-exercise');
 
-  // 保留当前选择（如果刷新）
   const oldCat = catSel.value;
   catSel.innerHTML = '<option value="">请选择</option>';
   exSel.innerHTML = '<option value="">请先选择分类</option>';
@@ -67,7 +66,7 @@ async function loadExercises() {
     });
   };
 
-  // 动作库页面：按分类折叠，默认折叠
+  // 动作库页面：按分类折叠，默认折叠，不显示数量
   const list = $('#ex-list');
   list.innerHTML = '';
   const groups = {};
@@ -81,7 +80,7 @@ async function loadExercises() {
     const group = document.createElement('div');
     group.className = 'ex-group collapsed';
     group.innerHTML = `
-      <div class="ex-group-header">${cat} <span style="color:var(--text-secondary);font-size:13px;">(${items.length})</span></div>
+      <div class="ex-group-header">${cat}</div>
       <div class="ex-group-body"></div>
     `;
     const body = group.querySelector('.ex-group-body');
@@ -181,6 +180,29 @@ $('#btn-add-set').addEventListener('click', async () => {
   toast('添加成功');
 });
 
+function renderSetItem(s, list) {
+  const d = new Date(s.created_at);
+  const timeStr = d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const rpeStr = s.rpe ? (s.rpe == 1 ? `@${s.rpe}rep` : `@${s.rpe}reps`) : '';
+  const warmupCls = s.is_warmup ? 'set-warmup' : '';
+  const div = document.createElement('div');
+  div.className = `set-item ${warmupCls}`;
+  div.innerHTML = `
+    <span class="set-data">
+      <strong>${s.weight}kg</strong> × ${s.reps}
+      ${rpeStr ? `<span style="color:var(--text-secondary)">${rpeStr}</span>` : ''}
+      <span class="set-time">${timeStr}</span>
+      ${s.is_warmup ? '<span style="color:var(--secondary);font-size:12px;">[热身]</span>' : ''}
+    </span>
+    <button class="btn small danger" data-id="${s.id}">删</button>
+  `;
+  div.querySelector('button').addEventListener('click', async () => {
+    await req(`/sets/${s.id}`, { method: 'DELETE' });
+    loadSets();
+  });
+  list.appendChild(div);
+}
+
 async function loadSets() {
   if (!currentWorkoutId) return;
   const w = await req(`/workouts/${currentWorkoutId}`);
@@ -193,12 +215,16 @@ async function loadSets() {
   const exMap = {};
   exercises.forEach(e => exMap[e.id] = e.name);
 
-  // 按动作分组
+  // 按动作分组，每个动作内再按热身/常规分组
   const groups = {};
   w.sets.forEach(s => {
     const name = exMap[s.exercise_id] || '未知';
-    if (!groups[name]) groups[name] = [];
-    groups[name].push(s);
+    if (!groups[name]) groups[name] = { warmups: [], normals: [] };
+    if (s.is_warmup) {
+      groups[name].warmups.push(s);
+    } else {
+      groups[name].normals.push(s);
+    }
   });
 
   for (const [name, sets] of Object.entries(groups)) {
@@ -206,28 +232,22 @@ async function loadSets() {
     h.style.cssText = 'font-weight:600;margin:10px 0 6px;color:var(--accent);';
     h.textContent = name;
     list.appendChild(h);
-    sets.forEach(s => {
-      const d = new Date(s.created_at);
-      const timeStr = d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      const rpeStr = s.rpe ? (s.rpe == 1 ? `@${s.rpe}rep` : `@${s.rpe}reps`) : '';
-      const warmupCls = s.is_warmup ? 'set-warmup' : '';
-      const div = document.createElement('div');
-      div.className = `set-item ${warmupCls}`;
-      div.innerHTML = `
-        <span class="set-data">
-          <strong>${s.weight}kg</strong> × ${s.reps}
-          ${rpeStr ? `<span style="color:var(--text-secondary)">${rpeStr}</span>` : ''}
-          <span class="set-time">${timeStr}</span>
-          ${s.is_warmup ? '<span style="color:var(--secondary);font-size:12px;">[热身]</span>' : ''}
-        </span>
-        <button class="btn small danger" data-id="${s.id}">删</button>
-      `;
-      div.querySelector('button').addEventListener('click', async () => {
-        await req(`/sets/${s.id}`, { method: 'DELETE' });
-        loadSets();
-      });
-      list.appendChild(div);
-    });
+
+    if (sets.warmups.length > 0) {
+      const wt = document.createElement('div');
+      wt.className = 'warmup-title';
+      wt.textContent = '热身组';
+      list.appendChild(wt);
+      sets.warmups.forEach(s => renderSetItem(s, list));
+    }
+
+    if (sets.normals.length > 0) {
+      const nt = document.createElement('div');
+      nt.className = 'normal-title';
+      nt.textContent = '常规组';
+      list.appendChild(nt);
+      sets.normals.forEach(s => renderSetItem(s, list));
+    }
   }
 }
 
@@ -242,9 +262,12 @@ async function loadWorkouts() {
   list.forEach(w => {
     const div = document.createElement('div');
     div.className = 'item';
+    const timePart = (w.time_ranges && w.time_ranges.length)
+      ? '&nbsp;&nbsp;' + w.time_ranges.join(' / ')
+      : '';
     div.innerHTML = `
       <div class="item-info">
-        <div class="item-title">${w.date}</div>
+        <div class="item-title">${w.date}${timePart}</div>
         <div class="item-meta">${w.notes || '无备注'}</div>
       </div>
       <button class="btn small danger" data-id="${w.id}">删除</button>
