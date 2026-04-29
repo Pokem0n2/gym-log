@@ -12,7 +12,11 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 async function req(path, opt) {
-  const res = await fetch(API + path, opt);
+  const res = await fetch(API + path, { ...opt, credentials: 'include' });
+  if (res.status === 401) {
+    window.location.href = '/login';
+    throw new Error('未登录');
+  }
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(txt);
@@ -20,6 +24,27 @@ async function req(path, opt) {
   if (res.status === 204) return null;
   return res.json();
 }
+
+// 检查登录状态
+async function checkAuth() {
+  try {
+    await req('/auth/me', { method: 'GET' });
+  } catch {
+    window.location.href = '/login';
+  }
+}
+
+// 退出登录
+$('#btn-logout').addEventListener('click', async () => {
+  await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
+  window.location.href = '/login';
+});
+
+// 初始化时先验证身份
+checkAuth().then(() => {
+  loadExercises();
+  loadWorkouts();
+});
 
 function fmtLocalDate(d) {
   const yyyy = d.getFullYear();
@@ -109,8 +134,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   $('#stat-start').value = startStr;
   $('#stat-end').value = todayStr;
 
-loadExercises();
-loadWorkouts();
 
 // ========== 训练 ==========
 $('#btn-new-workout').addEventListener('click', async () => {

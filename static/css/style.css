@@ -153,6 +153,18 @@ input:focus, select:focus { border-color: var(--accent); }
   gap: 10px;
 }
 
+.logout-btn {
+  flex: 0.5;
+  padding: 14px 0;
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+
 .btn-row .btn {
   flex: 1;
 }

@@ -1,4 +1,3 @@
-gym-log
+*.exe
+*.exe~
 data/
-*.db
-.env

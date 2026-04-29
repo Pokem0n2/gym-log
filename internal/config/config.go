@@ -1,12 +1,10 @@
 package config
 
-import (
-	"os"
-)
+import "os"
 
 type Config struct {
-	Addr   string
-	DBPath string
+	Addr        string
+	UserDataDir string
 }
 
 func Load() *Config {
@@ -14,9 +12,9 @@ func Load() *Config {
 	if addr == "" {
 		addr = ":1118"
 	}
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		dbPath = "./data/gym.db"
+	userDataDir := os.Getenv("USER_DATA_DIR")
+	if userDataDir == "" {
+		userDataDir = "./data"
 	}
-	return &Config{Addr: addr, DBPath: dbPath}
+	return &Config{Addr: addr, UserDataDir: userDataDir}
 }

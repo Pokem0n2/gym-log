@@ -7,40 +7,55 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func New(db *repository.DB) *gin.Engine {
+func New(store *repository.UserStore) *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.CORS())
 
-	exh := handlers.NewExerciseHandler(db)
-	wh := handlers.NewWorkoutHandler(db)
-	sh := handlers.NewSetHandler(db)
-	sth := handlers.NewStatsHandler(db)
+	auth := handlers.NewAuthHandler(store)
+	exh := handlers.NewExerciseHandler()
+	wh := handlers.NewWorkoutHandler()
+	sh := handlers.NewSetHandler()
+	sth := handlers.NewStatsHandler()
 
+	// 公开路由
 	api := r.Group("/api/v1")
 	{
+		api.POST("/auth/login", auth.Login)
+		api.POST("/auth/logout", auth.Logout)
+	}
+
+	// 需认证的路由
+	authAPI := api.Group("", middleware.AuthRequired(store))
+	{
+		authAPI.GET("/auth/me", auth.Me)
+		authAPI.POST("/auth/change-password", auth.ChangePassword)
+
 		// 动作库
-		api.GET("/exercises", exh.List)
-		api.POST("/exercises", exh.Create)
-		api.DELETE("/exercises/:id", exh.Delete)
+		authAPI.GET("/exercises", exh.List)
+		authAPI.POST("/exercises", exh.Create)
+		authAPI.DELETE("/exercises/:id", exh.Delete)
 
 		// 训练记录
-		api.GET("/workouts", wh.List)
-		api.GET("/workouts/:id", wh.Get)
-		api.POST("/workouts", wh.Create)
-		api.DELETE("/workouts/:id", wh.Delete)
+		authAPI.GET("/workouts", wh.List)
+		authAPI.GET("/workouts/:id", wh.Get)
+		authAPI.POST("/workouts", wh.Create)
+		authAPI.DELETE("/workouts/:id", wh.Delete)
 
 		// 组记录
-		api.POST("/workouts/:workout_id/sets", sh.Create)
-		api.DELETE("/sets/:id", sh.Delete)
+		authAPI.POST("/workouts/:workout_id/sets", sh.Create)
+		authAPI.DELETE("/sets/:id", sh.Delete)
 
 		// 统计
-		api.GET("/stats/exercise/:exercise_id", sth.ExerciseHistory)
-		api.GET("/stats/volume", sth.VolumeByDate)
+		authAPI.GET("/stats/exercise/:exercise_id", sth.ExerciseHistory)
+		authAPI.GET("/stats/volume", sth.VolumeByDate)
 	}
 
 	r.Static("/static", "./static")
 	r.GET("/", func(c *gin.Context) {
 		c.File("./static/index.html")
+	})
+	r.GET("/login", func(c *gin.Context) {
+		c.File("./static/login.html")
 	})
 
 	r.GET("/health", func(c *gin.Context) {

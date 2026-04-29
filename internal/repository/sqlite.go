@@ -185,7 +185,7 @@ func (db *DB) ListExercises() ([]models.Exercise, error) {
 	}
 	defer rows.Close()
 
-	var list []models.Exercise
+	list := make([]models.Exercise, 0)
 	for rows.Next() {
 		var e models.Exercise
 		if err := rows.Scan(&e.ID, &e.Name, &e.Category, &e.Fields, &e.CreatedAt); err != nil {
@@ -224,7 +224,7 @@ func (db *DB) ListWorkouts() ([]models.Workout, error) {
 	}
 	defer rows.Close()
 
-	var list []models.Workout
+	list := make([]models.Workout, 0)
 	var current *models.Workout
 	for rows.Next() {
 		var w models.Workout

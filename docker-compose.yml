@@ -8,4 +8,4 @@ services:
     restart: unless-stopped
     environment:
       - ADDR=:1118
-      - DB_PATH=/data/gym.db
+      - USER_DATA_DIR=/data

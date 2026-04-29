@@ -13,6 +13,6 @@ COPY --from=builder /app/gym-log .
 COPY --from=builder /app/static ./static
 EXPOSE 1118
 ENV ADDR=:1118
-ENV DB_PATH=/data/gym.db
+ENV USER_DATA_DIR=/data
 VOLUME ["/data"]
 ENTRYPOINT ["./gym-log"]
