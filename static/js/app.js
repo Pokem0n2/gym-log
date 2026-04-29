@@ -21,6 +21,13 @@ async function req(path, opt) {
   return res.json();
 }
 
+function fmtLocalDate(d) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 // ========== 字段元数据 ==========
 const FIELD_META = {
   weight:     { label: '重量', unit: 'kg',     type: 'number', step: '0.5', min: '0' },
@@ -92,10 +99,10 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 // ========== 初始化 ==========
   // 默认训练量统计日期范围为近30天
   const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = fmtLocalDate(today);
   const thirtyDaysAgo = new Date(today);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const startStr = thirtyDaysAgo.toISOString().split('T')[0];
+  const startStr = fmtLocalDate(thirtyDaysAgo);
 
   $('#train-date').value = todayStr;
   $('#train-date').max = todayStr;
