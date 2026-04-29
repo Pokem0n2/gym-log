@@ -7,9 +7,8 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o gym-log .
 
-# 国内拉不动 gcr.io 时，可替换为：
-# FROM m.daocloud.io/gcr.io/distroless/static-debian12
-FROM gcr.io/distroless/static-debian12
+# 原版映像源（海外）：FROM gcr.io/distroless/static-debian12
+FROM m.daocloud.io/gcr.io/distroless/static-debian12
 WORKDIR /app
 COPY --from=builder /app/gym-log .
 COPY --from=builder /app/static ./static
