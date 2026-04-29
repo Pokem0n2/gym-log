@@ -17,6 +17,34 @@ func NewAuthHandler(store *repository.UserStore) *AuthHandler {
 	return &AuthHandler{store: store}
 }
 
+// setTokenCookie 设置持久化 Cookie（10 年）
+func setTokenCookie(c *gin.Context, token string) {
+	cookie := &http.Cookie{
+		Name:     "token",
+		Value:    token,
+		MaxAge:   10 * 365 * 24 * 3600,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   false,
+	}
+	http.SetCookie(c.Writer, cookie)
+}
+
+// clearTokenCookie 清除 Cookie
+func clearTokenCookie(c *gin.Context) {
+	cookie := &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		MaxAge:   -1,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   false,
+	}
+	http.SetCookie(c.Writer, cookie)
+}
+
 // Login 登录
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.LoginRequest
@@ -37,8 +65,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// HttpOnly Cookie，前端无需处理 token
-	c.SetCookie("token", token, 7*24*3600, "/", "", false, true)
+	setTokenCookie(c, token)
 	c.JSON(http.StatusOK, gin.H{
 		"user_id":  user.UserID,
 		"username": user.Username,
@@ -47,7 +74,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 // Logout 登出
 func (h *AuthHandler) Logout(c *gin.Context) {
-	c.SetCookie("token", "", -1, "/", "", false, true)
+	clearTokenCookie(c)
 	c.JSON(http.StatusOK, gin.H{"message": "已登出"})
 }
 

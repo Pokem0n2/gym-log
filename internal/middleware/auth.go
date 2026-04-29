@@ -16,11 +16,11 @@ func SetJWTSecret(secret string) {
 	jwtSecret = []byte(secret)
 }
 
-// GenerateToken 生成 JWT
+// GenerateToken 生成 JWT（有效期 10 年）
 func GenerateToken(userID string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
-		"exp":     time.Now().Add(7 * 24 * time.Hour).Unix(),
+		"exp":     time.Now().AddDate(10, 0, 0).Unix(),
 		"iat":     time.Now().Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
