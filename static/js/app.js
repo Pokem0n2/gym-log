@@ -559,9 +559,12 @@ $('#btn-load-pr').addEventListener('click', async () => {
 });
 
 function renderChart(canvasId, chartVar, label, labels, data, color) {
-  const ctx = $(`#${canvasId}`).getContext('2d');
-  if (chartVar) chartVar.destroy();
-  chartVar = new Chart(ctx, {
+  const canvas = $(`#${canvasId}`);
+  const ctx = canvas.getContext('2d');
+  if (chartVar) chartVar.destroy();   // ← 销毁旧实例
+  ctx.clearRect(0, 0, canvas.width, canvas.height);   // 多加一层清理，彻底抹掉旧图表像素
+  canvas.width = canvas.width;   // reset 触发缓冲区清空
+  chartVar = new Chart(ctx, {   // ← 创建新实例
     type: 'line',
     data: {
       labels,
